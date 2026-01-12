@@ -4,21 +4,21 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>立て替え入力</title>
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#f6f4ef" />
   <style>
     :root{
-      --bg: #0b1220;
-      --card: rgba(255,255,255,.08);
-      --card2: rgba(255,255,255,.06);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.68);
-      --line: rgba(255,255,255,.14);
-      --good: #22c55e;
-      --bad: #ef4444;
-      --warn: #f59e0b;
-      --btn: #ffffff;
-      --btnText: #0b1220;
-      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --bg1:#f6f4ef;
+      --bg2:#fbfaf7;
+      --card:#ffffffcc;
+      --text:#2b2b2b;
+      --muted:#6b6b6b;
+      --line:#e7e1d8;
+      --accent:#3b7c6a;
+      --accent2:#a6c9b8;
+      --good:#2f855a;
+      --bad:#c53030;
+      --warn:#b7791f;
+      --shadow: 0 18px 50px rgba(35, 32, 26, .12);
       --radius: 18px;
       --radius2: 14px;
       --pad: 18px;
@@ -31,10 +31,11 @@
       margin:0;
       font-family: var(--font);
       color: var(--text);
-      background: radial-gradient(1200px 600px at 20% 0%, #1e293b 0%, transparent 55%),
-                  radial-gradient(900px 600px at 100% 20%, #0ea5e9 0%, transparent 42%),
-                  radial-gradient(800px 500px at 70% 100%, #22c55e 0%, transparent 40%),
-                  var(--bg);
+      background:
+        radial-gradient(900px 520px at 12% 0%, #e8f2ed 0%, transparent 55%),
+        radial-gradient(900px 520px at 100% 10%, #fff1e6 0%, transparent 48%),
+        radial-gradient(900px 520px at 70% 110%, #e7efe9 0%, transparent 48%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
@@ -48,7 +49,7 @@
     .wrap{
       width: 100%;
       max-width: 520px;
-      padding: 22px 16px 28px;
+      padding: 20px 16px 28px;
     }
     header{
       display:flex;
@@ -65,45 +66,51 @@
     .title h1{
       margin:0;
       font-size: 20px;
-      letter-spacing: .02em;
+      letter-spacing: .01em;
+      font-weight: 800;
     }
     .title p{
       margin:0;
       color: var(--muted);
       font-size: 13px;
-      line-height: 1.4;
+      line-height: 1.45;
     }
+
     .chip{
       display:inline-flex;
       align-items:center;
       gap:8px;
       padding: 10px 12px;
       border: 1px solid var(--line);
-      background: rgba(255,255,255,.06);
+      background: rgba(255,255,255,.75);
       border-radius: 999px;
       font-size: 12px;
       color: var(--muted);
       user-select:none;
       white-space:nowrap;
+      box-shadow: 0 10px 25px rgba(35, 32, 26, .06);
     }
     .dot{
       width:10px;height:10px;border-radius:50%;
-      background: rgba(255,255,255,.35);
-      box-shadow: 0 0 0 2px rgba(255,255,255,.10) inset;
+      background: #cbd5d1;
+      box-shadow: 0 0 0 2px rgba(0,0,0,.04) inset;
     }
-    .dot.ok{ background: var(--good); }
-    .dot.ng{ background: var(--bad); }
+    .dot.ok{ background: #46b27a; }
+    .dot.ng{ background: #e07070; }
+
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.06));
-      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.80));
+      border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
     .cardHead{
       padding: 16px var(--pad);
-      border-bottom: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.65);
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -116,9 +123,10 @@
     .cardHead .value{
       font-size: 13px;
       color: var(--text);
-      font-weight: 600;
-      letter-spacing:.02em;
+      font-weight: 800;
+      letter-spacing:.01em;
     }
+
     form{
       padding: 14px var(--pad) 16px;
       display:flex;
@@ -137,13 +145,13 @@
       font-size: 12px;
       color: var(--muted);
     }
-    input, select, textarea{
+    input, textarea{
       appearance:none;
       width: 100%;
       min-height: var(--tap);
       border-radius: var(--radius2);
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.25);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.88);
       color: var(--text);
       padding: 12px 12px;
       font-size: 16px; /* iPhoneズーム防止 */
@@ -155,25 +163,21 @@
       line-height: 1.35;
       padding-top: 12px;
     }
-    input::placeholder, textarea::placeholder{ color: rgba(255,255,255,.35); }
-    input:focus, select:focus, textarea:focus{
-      border-color: rgba(255,255,255,.28);
-      box-shadow: 0 0 0 4px rgba(14,165,233,.15);
+    input::placeholder, textarea::placeholder{ color: rgba(43,43,43,.35); }
+    input:focus, textarea:focus{
+      border-color: rgba(59,124,106,.45);
+      box-shadow: 0 0 0 4px rgba(59,124,106,.14);
     }
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
+
     .btn{
       width:100%;
       min-height: 56px;
       border: none;
       border-radius: 16px;
-      background: var(--btn);
-      color: var(--btnText);
+      background: linear-gradient(180deg, #3b7c6a, #2f6b5c);
+      color: #ffffff;
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing:.02em;
       display:inline-flex;
       justify-content:center;
@@ -183,34 +187,31 @@
       transition: transform .04s ease, filter .2s ease, opacity .2s ease;
       -webkit-tap-highlight-color: transparent;
       user-select:none;
+      box-shadow: 0 14px 30px rgba(59,124,106,.18);
     }
     .btn:active{ transform: scale(.99); }
     .btn[disabled]{ opacity:.55; cursor:not-allowed; }
+
     .btnGhost{
       min-height: 46px;
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.70);
       color: var(--text);
-      font-weight: 700;
+      font-weight: 800;
       font-size: 14px;
       padding: 0 14px;
     }
-    .btnRow{
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    .btnRow .btnGhost{ flex: 0 0 auto; }
+
     .help{
       margin-top: 6px;
       font-size: 12px;
-      color: rgba(255,255,255,.55);
-      line-height: 1.4;
+      color: rgba(43,43,43,.62);
+      line-height: 1.45;
     }
-    .help strong{ color: rgba(255,255,255,.86); }
+    .help strong{ color: rgba(43,43,43,.90); }
     .divider{
-      height:1px; background: rgba(255,255,255,.10);
+      height:1px; background: var(--line);
       margin: 10px 0 2px;
     }
 
@@ -227,9 +228,9 @@
       display:none;
       padding: 12px 14px;
       border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(15,23,42,.86);
-      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.90);
+      box-shadow: 0 14px 40px rgba(35, 32, 26, .14);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       align-items:flex-start;
@@ -241,25 +242,27 @@
       width: 28px; height: 28px;
       border-radius: 9px;
       display:flex; align-items:center; justify-content:center;
-      background: rgba(255,255,255,.10);
+      background: rgba(59,124,106,.12);
+      color: var(--accent);
       flex: 0 0 auto;
       margin-top:2px;
+      font-weight: 900;
     }
-    .toast.ok .icon{ background: rgba(34,197,94,.18); }
-    .toast.ng .icon{ background: rgba(239,68,68,.18); }
-    .toast.warn .icon{ background: rgba(245,158,11,.18); }
+    .toast.ok .icon{ background: rgba(47,133,90,.12); color: var(--good); }
+    .toast.ng .icon{ background: rgba(197,48,48,.10); color: var(--bad); }
+    .toast.warn .icon{ background: rgba(183,121,31,.10); color: var(--warn); }
     .toast .t{
       display:flex; flex-direction:column; gap:3px;
       min-width:0;
     }
     .toast .t .h{
       font-size: 13px;
-      font-weight: 800;
-      letter-spacing:.02em;
+      font-weight: 900;
+      letter-spacing:.01em;
     }
     .toast .t .b{
       font-size: 12px;
-      color: rgba(255,255,255,.72);
+      color: rgba(43,43,43,.70);
       line-height: 1.35;
       word-break: break-word;
     }
@@ -267,7 +270,7 @@
       margin-left:auto;
       border:none;
       background: transparent;
-      color: rgba(255,255,255,.75);
+      color: rgba(43,43,43,.65);
       font-size: 18px;
       padding: 2px 6px;
       border-radius: 10px;
@@ -277,8 +280,8 @@
     /* History */
     .history{
       margin-top: 14px;
-      background: rgba(255,255,255,.04);
-      border-top: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.55);
+      border-top: 1px solid var(--line);
       padding: 12px var(--pad) 16px;
     }
     .historyTop{
@@ -291,8 +294,9 @@
     .historyTop h2{
       margin:0;
       font-size: 13px;
-      color: rgba(255,255,255,.86);
-      letter-spacing:.02em;
+      color: rgba(43,43,43,.90);
+      letter-spacing:.01em;
+      font-weight: 900;
     }
     .list{
       display:flex;
@@ -302,8 +306,8 @@
     .item{
       padding: 10px 12px;
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.22);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.85);
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
@@ -317,8 +321,8 @@
     }
     .item .desc{
       font-size: 13px;
-      font-weight: 750;
-      color: rgba(255,255,255,.92);
+      font-weight: 900;
+      color: rgba(43,43,43,.92);
       overflow:hidden;
       text-overflow:ellipsis;
       white-space:nowrap;
@@ -326,26 +330,26 @@
     }
     .item .meta{
       font-size: 11px;
-      color: rgba(255,255,255,.55);
+      color: rgba(43,43,43,.60);
     }
     .item .amt{
       font-size: 14px;
       font-weight: 900;
       letter-spacing:.02em;
       white-space:nowrap;
+      color: rgba(43,43,43,.92);
     }
 
     /* spinner */
     .spin{
       width:18px;height:18px;
       border-radius:999px;
-      border: 2px solid rgba(0,0,0,.15);
-      border-top-color: rgba(0,0,0,.55);
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: rgba(255,255,255,.95);
       animation: r 0.8s linear infinite;
     }
     @keyframes r{ to { transform: rotate(360deg); } }
 
-    /* small */
     @media (max-width: 420px){
       .grid{ grid-template-columns: 1fr; }
       .item .desc{ max-width: 240px; }
@@ -371,7 +375,7 @@
       <header>
         <div class="title">
           <h1>立て替え入力</h1>
-          <p>ランチや現金払いなど、立て替えた分だけサッと送信。</p>
+          <p>立て替えた分だけ、さくっと入力して送信。</p>
         </div>
         <div class="chip" id="statusChip" title="接続状態">
           <span class="dot" id="statusDot"></span>
@@ -402,31 +406,18 @@
           </div>
 
           <label>
-            内容（お店/用途）
-            <input id="desc" name="desc" type="text" maxlength="60" placeholder="例：ランチ / コンビニ" required />
+            内容
+            <input id="desc" name="desc" type="text" maxlength="60" placeholder="例：ランチ" required />
           </label>
 
-          <label>
-            支払い（任意）
-            <select id="pay" name="pay">
-              <option value="">選択しない</option>
-              <option value="現金">現金</option>
-              <option value="クレカ">クレカ</option>
-              <option value="交通IC">交通IC</option>
-              <option value="その他">その他</option>
-            </select>
-          </label>
-
-          <div class="btnRow">
-            <button class="btn" id="submit" type="submit">
-              <span id="btnText">送信する</span>
-              <span id="btnSpin" class="spin" style="display:none;"></span>
-            </button>
-          </div>
+          <button class="btn" id="submit" type="submit">
+            <span id="btnText">送信する</span>
+            <span id="btnSpin" class="spin" style="display:none;"></span>
+          </button>
 
           <div class="help">
             送信したら <strong>そのまま閉じてOK</strong>。<br/>
-            ミスしたら同じ内容でまた送って、あとで翔吾が仕訳します。
+            あとで翔吾が仕訳します。
           </div>
 
           <div class="divider"></div>
@@ -446,27 +437,25 @@
     </div>
   </div>
 
-  <!-- Settings modal (simple) -->
-  <dialog id="dlg" style="border:none;border-radius:18px;max-width:520px;width:calc(100% - 32px);padding:0;background:rgba(15,23,42,.98);color:rgba(255,255,255,.92);box-shadow:0 25px 80px rgba(0,0,0,.6);">
-    <div style="padding:16px 16px 14px;border-bottom:1px solid rgba(255,255,255,.10);display:flex;justify-content:space-between;align-items:center;gap:10px;">
+  <dialog id="dlg" style="border:none;border-radius:18px;max-width:520px;width:calc(100% - 32px);padding:0;background:rgba(255,255,255,.96);color:#2b2b2b;box-shadow:0 25px 80px rgba(35, 32, 26, .22);">
+    <div style="padding:16px 16px 14px;border-bottom:1px solid #e7e1d8;display:flex;justify-content:space-between;align-items:center;gap:10px;">
       <div>
-        <div style="font-weight:900;letter-spacing:.02em;">設定</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.60);margin-top:4px;">最初に1回だけでOK。</div>
+        <div style="font-weight:900;letter-spacing:.01em;">設定</div>
+        <div style="font-size:12px;color:#6b6b6b;margin-top:4px;">最初に1回だけでOK。</div>
       </div>
       <button id="dlgClose" class="btnGhost" type="button" style="min-height:40px;">閉じる</button>
     </div>
 
     <div style="padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;">
-      <label style="font-size:12px;color:rgba(255,255,255,.70);display:flex;flex-direction:column;gap:8px;">
+      <label style="font-size:12px;color:#6b6b6b;display:flex;flex-direction:column;gap:8px;">
         合言葉（passcode）
-        <input id="passcode" type="password" inputmode="text" placeholder="家の合言葉" style="min-height:54px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.25);color:rgba(255,255,255,.92);padding:12px;font-size:16px;">
+        <input id="passcode" type="password" inputmode="text" placeholder="家の合言葉"
+          style="min-height:54px;border-radius:14px;border:1px solid #e7e1d8;background:#fff;color:#2b2b2b;padding:12px;font-size:16px;outline:none;">
       </label>
 
-      <div style="display:flex;gap:10px;align-items:center;">
-        <button id="btnSavePass" class="btn" type="button" style="min-height:52px;border-radius:16px;">保存する</button>
-      </div>
+      <button id="btnSavePass" class="btn" type="button" style="min-height:52px;border-radius:16px;">保存する</button>
 
-      <div style="font-size:12px;color:rgba(255,255,255,.60);line-height:1.45;">
+      <div style="font-size:12px;color:#6b6b6b;line-height:1.45;">
         これはこの端末だけに保存されます。<br/>
         忘れたら翔吾に聞けばOK。
       </div>
@@ -474,14 +463,11 @@
   </dialog>
 
   <script>
-    /**********************
-     * 設定
-     **********************/
     // ★ここだけ変更：あなたのWebアプリ /exec URL
     const GAS_ENDPOINT = "https://script.google.com/macros/s/XXXXXXXXXXXX/exec";
 
-    const LS_PASS = "tatekai_passcode_v1";
-    const LS_HISTORY = "tatekai_history_v1";
+    const LS_PASS = "tatekai_passcode_v2";
+    const LS_HISTORY = "tatekai_history_v2";
 
     const el = (id) => document.getElementById(id);
 
@@ -497,7 +483,6 @@
     const $date = el("date");
     const $amount = el("amount");
     const $desc = el("desc");
-    const $pay = el("pay");
     const $submit = el("submit");
     const $btnText = el("btnText");
     const $btnSpin = el("btnSpin");
@@ -576,7 +561,7 @@
         desc.textContent = x.desc;
         const meta = document.createElement("div");
         meta.className = "meta";
-        meta.textContent = `${x.date} / ${x.pay || "支払い未指定"} / ${x.status}`;
+        meta.textContent = `${x.date} / ${x.status}`;
         left.appendChild(desc);
         left.appendChild(meta);
 
@@ -605,7 +590,6 @@
     }
 
     async function ping(){
-      // 端末で「設定済み」かどうかだけ見える化（疎通の厳密チェックは送信時）
       const pc = getPasscode();
       if (!GAS_ENDPOINT.includes("/exec")){
         setStatus(false, "URL未設定");
@@ -661,8 +645,7 @@
         passcode,
         date: $date.value,
         amount: Number($amount.value),
-        desc: ($desc.value || "").trim(),
-        pay: ($pay.value || "").trim()
+        desc: ($desc.value || "").trim()
       };
 
       if (!payload.date || !payload.amount || !payload.desc){
@@ -679,7 +662,6 @@
           body: JSON.stringify(payload)
         });
 
-        // GASは200でJSONを返す想定
         const data = await res.json().catch(() => null);
 
         if (!data){
@@ -697,12 +679,10 @@
           // 次入力が楽になる初期化（奥さん向け：日付は今日のまま、金額/内容だけ消す）
           $amount.value = "";
           $desc.value = "";
-          $pay.value = "";
           $amount.focus();
           return;
         }
 
-        // エラー系
         if (data.error === "unauthorized"){
           showToast("ng", "合言葉が違うかも", "設定から合言葉を入れ直してね。");
           setStatus(false, "合言葉エラー");
@@ -731,13 +711,11 @@
       }
     });
 
-    // 初期化
     (function init(){
       $date.value = todayYmd();
       renderHistory();
       ping();
 
-      // passcode未設定なら最初から設定を開く（奥さん体験を良くする）
       if (!getPasscode()){
         setTimeout(openSettings, 250);
       }
