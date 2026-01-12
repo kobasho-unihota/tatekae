@@ -91,11 +91,22 @@
 
     try{
       status.textContent = "送信中…";
-      const res = await fetch(GAS_ENDPOINT, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(payload)
-      });
+      const params = new URLSearchParams();
+params.append("amount", String(Number(amount)));
+params.append("date", date);
+params.append("desc", desc);
+params.append("pay", pay || "");
+params.append("passcode", passcode);
+
+const res = await fetch(GAS_ENDPOINT, {
+  method: "POST",
+  body: params
+});
+const text = await res.text();
+
+// JSONが返ってくる想定（返らない時もあるのでtry）
+let json;
+try { json = JSON.parse(text); } catch { json = { ok:false, error:"non_json", detail:text }; }
       const json = await res.json();
       if(json.ok){
         status.textContent = "登録したよ ✅";
