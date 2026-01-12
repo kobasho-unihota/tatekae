@@ -12,7 +12,8 @@
     button { margin-top: 14px; font-weight: 700; }
     .row { display:flex; gap: 10px; }
     .row > div { flex: 1; }
-    .ok { margin-top: 12px; font-size: 14px; }
+    .status { margin-top: 12px; font-size: 14px; white-space: pre-wrap; }
+    .muted { color: #666; font-size: 12px; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -31,27 +32,34 @@
         <input id="date" type="date" />
       </div>
       <div>
-        <label>支払</label>
+        <label>支払（任意）</label>
         <input id="pay" placeholder="例：現金 / PayPay" />
       </div>
     </div>
 
-    <button id="send">送信</button>
-    <div class="ok" id="status"></div>
+    <button id="send" type="button">送信</button>
+    <div class="status" id="status"></div>
+    <div class="muted" id="debug"></div>
   </div>
 
 <script>
-  // ★ここをGASのWebアプリURLに差し替え
+  // ★ここをGASのWebアプリURL（/exec）に差し替え
   const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxJkPn6ubLm5b87TEHZWB3BuM8ndTia1s8X5y91CwWlbQ8M85nrAjQdbfUrREs175rS/exec";
 
-  // 初期値：今日
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const dd = String(d.getDate()).padStart(2,'0');
-  document.getElementById("date").value = `${yyyy}-${mm}-${dd}`;
+  const $ = (id) => document.getElementById(id);
 
-  // passcode（夫婦の合言葉）を端末に保存
+  // 今日を初期値に
+  (function initDate(){
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    $("date").value = `${yyyy}-${mm}-${dd}`;
+  })();
+
+  function setStatus(msg){ $("status").textContent = msg || ""; }
+  function setDebug(msg){ $("debug").textContent = msg || ""; }
+
   function getPasscode(){
     let p = localStorage.getItem("tatekai_passcode");
     if(!p){
@@ -61,65 +69,75 @@
     return p;
   }
 
-  document.getElementById("send").addEventListener("click", async () => {
-    const amount = document.getElementById("amount").value.trim();
-    const desc = document.getElementById("desc").value.trim();
-    const date = document.getElementById("date").value;
-    const pay  = document.getElementById("pay").value.trim();
+  async function send(){
+    // クリック反応の可視化
+    setStatus("入力チェック中…");
 
-    const status = document.getElementById("status");
-    status.textContent = "";
+    const amountRaw = $("amount").value.trim();
+    const desc = $("desc").value.trim();
+    const date = $("date").value;
+    const pay  = $("pay").value.trim();
 
-    if(!amount || !desc || !date){
-      status.textContent = "金額・内容・日付は必須だよ";
+    if(!amountRaw || !desc || !date){
+      setStatus("金額・内容・日付は必須だよ");
+      return;
+    }
+
+    const amount = Number(amountRaw);
+    if(!Number.isFinite(amount) || amount <= 0){
+      setStatus("金額が不正だよ（数字だけ入力してね）");
       return;
     }
 
     const passcode = getPasscode();
     if(!passcode){
-      status.textContent = "合言葉が未設定だよ";
+      setStatus("合言葉が未設定だよ");
       return;
     }
 
-    const payload = {
-      amount: Number(amount),
-      date,                 // YYYY-MM-DD
-      desc,
-      pay,
-      passcode
-    };
+    const params = new URLSearchParams();
+    params.append("amount", String(amount));
+    params.append("date", date);
+    params.append("desc", desc);
+    params.append("pay", pay || "");
+    params.append("passcode", passcode);
 
     try{
-      status.textContent = "送信中…";
-      const params = new URLSearchParams();
-params.append("amount", String(Number(amount)));
-params.append("date", date);
-params.append("desc", desc);
-params.append("pay", pay || "");
-params.append("passcode", passcode);
+      $("send").disabled = true;
+      setStatus("送信中…");
+      setDebug(`POST: ${GAS_ENDPOINT}`);
 
-const res = await fetch(GAS_ENDPOINT, {
-  method: "POST",
-  body: params
-});
-const text = await res.text();
+      const res = await fetch(GAS_ENDPOINT, { method: "POST", body: params });
+      const text = await res.text();
 
-// JSONが返ってくる想定（返らない時もあるのでtry）
-let json;
-try { json = JSON.parse(text); } catch { json = { ok:false, error:"non_json", detail:text }; }
-      const json = await res.json();
+      let json;
+      try { json = JSON.parse(text); }
+      catch { json = { ok:false, error:"non_json", detail:text, http_status: res.status }; }
+
       if(json.ok){
-        status.textContent = "登録したよ ✅";
-        document.getElementById("amount").value = "";
-        document.getElementById("desc").value = "";
-        document.getElementById("pay").value  = "";
+        setStatus("登録したよ ✅");
+        $("amount").value = "";
+        $("desc").value = "";
+        $("pay").value  = "";
       }else{
-        status.textContent = "失敗：" + (json.error || "unknown");
+        if(json.error === "zaim_not_authorized" && json.auth_url){
+          setStatus("初回認証が必要です。下のURLを開いて認証してね👇\n" + json.auth_url);
+        }else{
+          setStatus("失敗：" + (json.error || "unknown") + "\n" + (json.detail || ""));
+        }
       }
     }catch(e){
-      status.textContent = "通信エラー：" + e.message;
+      setStatus("通信エラー：" + e.message);
+    }finally{
+      $("send").disabled = false;
     }
-  });
+  }
+
+  // クリックイベント（確実に発火させる）
+  $("send").addEventListener("click", send);
+
+  // 「何も反応しない」対策：JSが動いてるかの印
+  setDebug("ready");
 </script>
 </body>
 </html>
