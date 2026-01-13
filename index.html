@@ -8,10 +8,10 @@
 <meta name="theme-color" content="#f6f4ef">
 
 <!-- iPhone ホーム画面用 -->
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=6">
-<link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon-167.png?v=6">
-<link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon-152.png?v=6">
-<link rel="apple-touch-icon" sizes="120x120" href="./apple-touch-icon-120.png?v=6">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=5">
+<link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon-167.png?v=5">
+<link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon-152.png?v=5">
+<link rel="apple-touch-icon" sizes="120x120" href="./apple-touch-icon-120.png?v=5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="立て替え入力">
@@ -152,30 +152,6 @@ input[type="date"]{
 .toast.ng{ background:#fdecec; color:var(--bad); }
 .toast.show{ display:block; }
 
-/* デバッグ（必要なときだけ開く） */
-details.debug{
-  margin-top:10px;
-  border:1px dashed rgba(107,107,107,.35);
-  border-radius:14px;
-  padding:10px 12px;
-  background: rgba(255,255,255,.55);
-}
-details.debug summary{
-  cursor:pointer;
-  color: var(--muted);
-  font-size:12px;
-  font-weight:700;
-  outline:none;
-}
-pre.debug{
-  margin:10px 0 0;
-  white-space:pre-wrap;
-  word-break:break-word;
-  font-size:11px;
-  line-height:1.35;
-  color: rgba(43,43,43,.78);
-}
-
 /* 履歴 */
 .history{
   margin-top:16px;
@@ -268,6 +244,75 @@ pre.debug{
   font-size:12px;
   color: var(--muted);
 }
+
+/* ====== 追加：合言葉設定（改善案1）ここだけ ====== */
+.passDlg{
+  border:none;
+  border-radius:18px;
+  width:min(520px, calc(100% - 32px));
+  padding:0;
+  background: rgba(255,255,255,.96);
+  color: var(--text);
+  box-shadow: 0 25px 80px rgba(35, 32, 26, .22);
+}
+.passDlg::backdrop{
+  background: rgba(246,244,239,.70);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.passDlgHead{
+  padding:16px 16px 14px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.passDlgTitle{
+  font-weight:800;
+  font-size:14px;
+}
+.passDlgSub{
+  font-size:12px;
+  color: var(--muted);
+  margin-top:4px;
+}
+.passDlgBody{
+  padding:14px 16px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.passDlgBtnRow{
+  display:flex;
+  gap:10px;
+}
+.passDlgBtn{
+  width:100%;
+  min-height:52px;
+  border:none;
+  border-radius:16px;
+  background: var(--accent);
+  color:#fff;
+  font-size:16px;
+  font-weight:800;
+}
+.passDlgGhost{
+  border:1px solid var(--line);
+  background:#fff;
+  color: var(--muted);
+  min-height:40px;
+  padding:0 12px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:700;
+}
+.passHint{
+  font-size:12px;
+  color: var(--muted);
+  line-height:1.45;
+}
+/* ====== 追加ここまで ====== */
 </style>
 </head>
 
@@ -313,12 +358,6 @@ pre.debug{
       </button>
     </form>
 
-    <!-- デバッグ（必要なら開いてコピペできる） -->
-    <details class="debug" id="dbgBox">
-      <summary>通信ができないとき（デバッグ情報）</summary>
-      <pre class="debug" id="dbg"></pre>
-    </details>
-
     <div class="history">
       <div class="historyTitle">
         <span>このiPhoneの送信履歴</span>
@@ -328,6 +367,33 @@ pre.debug{
     </div>
   </div>
 </div>
+
+<!-- ====== 追加：合言葉設定ダイアログ（改善案1） ====== -->
+<dialog id="passDlg" class="passDlg">
+  <div class="passDlgHead">
+    <div>
+      <div class="passDlgTitle">合言葉の設定</div>
+      <div class="passDlgSub">最初に1回だけでOK</div>
+    </div>
+    <button id="passDlgClose" type="button" class="passDlgGhost">閉じる</button>
+  </div>
+
+  <div class="passDlgBody">
+    <label>
+      合言葉
+      <input id="passInput" type="password" inputmode="text" placeholder="合言葉を入力">
+    </label>
+
+    <div class="passDlgBtnRow">
+      <button id="passSave" type="button" class="passDlgBtn">保存する</button>
+    </div>
+
+    <div class="passHint">
+      ※ このiPhoneだけに保存されます。
+    </div>
+  </div>
+</dialog>
+<!-- ====== 追加ここまで ====== -->
 
 <script>
 const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxJkPn6ubLm5b87TEHZWB3BuM8ndTia1s8X5y91CwWlbQ8M85nrAjQdbfUrREs175rS/exec";
@@ -340,8 +406,36 @@ const list = $("list");
 const overlay = $("overlay");
 const btnText = $("btnText");
 const btnSpin = $("btnSpin");
-const dbg = $("dbg");
-const dbgBox = $("dbgBox");
+
+/* ====== 追加：合言葉設定（改善案1）ここだけ ====== */
+const passDlg = $("passDlg");
+const passInput = $("passInput");
+const passSave = $("passSave");
+const passDlgClose = $("passDlgClose");
+
+function getPasscode(){
+  return (localStorage.getItem(LS_PASS) || "").trim();
+}
+function openPassDialog(){
+  passInput.value = getPasscode();
+  if (typeof passDlg.showModal === "function") passDlg.showModal();
+}
+function closePassDialog(){
+  try { passDlg.close(); } catch (_) {}
+}
+passDlgClose.onclick = () => closePassDialog();
+passSave.onclick = () => {
+  const v = (passInput.value || "").trim();
+  if (!v){
+    showToast("ng","合言葉を入力してください");
+    return;
+  }
+  localStorage.setItem(LS_PASS, v);
+  showToast("ok","保存しました");
+  closePassDialog();
+  setTimeout(hideToast, 1200);
+};
+/* ====== 追加ここまで ====== */
 
 function showToast(type,msg){
   toast.className = "toast show " + type;
@@ -401,16 +495,6 @@ function normalizeAmount(v){
   return Number.isFinite(n) ? n : 0;
 }
 
-function setDebug(obj){
-  try{
-    dbg.textContent = JSON.stringify(obj, null, 2);
-    dbgBox.open = true;
-  }catch{
-    dbg.textContent = String(obj);
-    dbgBox.open = true;
-  }
-}
-
 $("date").value=today();
 renderHistory();
 
@@ -421,19 +505,15 @@ $("clear").onclick=()=>{
   setTimeout(hideToast,1200);
 };
 
-// ★送信を form-urlencoded に統一（iOS/ホーム画面追加で落ちにくい）
 $("form").onsubmit = async (e) => {
   e.preventDefault();
   hideToast();
-  dbg.textContent = "";
-  dbgBox.open = false;
 
-  const passcode = (localStorage.getItem(LS_PASS) || "").trim();
+  const passcode = getPasscode();
   if (!passcode){
     showToast("ng","合言葉が未設定です（翔吾に設定してもらってね）");
-    addHistory($("date").value, $("desc").value.trim() || "-", "送信失敗");
-    setDebug({ reason: "passcode_empty", hint: "localStorage(LS_PASS) が空です" });
-    return;
+    openPassDialog(); /* ← 追加：未設定なら設定画面を出す */
+    return;           /* ← ここで止める（履歴も増やさない） */
   }
 
   const date = $("date").value;
@@ -442,28 +522,21 @@ $("form").onsubmit = async (e) => {
 
   if(!date || !amount || !desc){
     showToast("ng","入力を確認してください");
-    setDebug({ reason: "invalid_input", date, amount, desc_len: desc.length });
     return;
   }
 
-  const payload = { passcode, date, amount: String(amount), desc };
+  const payload = { passcode, date, amount, desc };
 
   setLoading(true);
 
-  let res = null;
-  let raw = "";
-  let data = null;
-
   try{
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
+    const timer = setTimeout(() => controller.abort(), 15000); // 15秒でタイムアウト
 
-    const body = new URLSearchParams(payload).toString();
-
-    res = await fetch(GAS_ENDPOINT, {
+    const res = await fetch(GAS_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
       cache: "no-store",
       redirect: "follow",
       signal: controller.signal,
@@ -471,18 +544,14 @@ $("form").onsubmit = async (e) => {
 
     clearTimeout(timer);
 
-    raw = await res.text();
-    try { data = JSON.parse(raw); } catch { data = null; }
+    // 文字列で受けてからJSON化（GASがたまにtext/htmlを返すケース対策）
+    const txt = await res.text();
+    let data = null;
+    try { data = JSON.parse(txt); } catch { data = null; }
 
     if (!data){
       showToast("ng","通信結果を読み取れませんでした");
       addHistory(date, desc, "送信失敗");
-      setDebug({
-        reason: "json_parse_failed",
-        http_status: res.status,
-        response_preview: raw.slice(0, 500),
-        note: "GASがHTML/ログイン画面等を返している可能性"
-      });
       return;
     }
 
@@ -495,47 +564,45 @@ $("form").onsubmit = async (e) => {
       return;
     }
 
-    // エラー種別ごとに表示（奥さん向けに噛み砕く）
+    // エラー種別ごとに表示
     if (data.error === "unauthorized"){
       showToast("ng","合言葉が違うかも（翔吾に確認してね）");
       addHistory(date, desc, "送信失敗");
-      setDebug({ reason: "unauthorized", data });
       return;
     }
     if (data.error === "zaim_not_authorized"){
       showToast("ng","初回設定が必要です（翔吾に言ってね）");
       addHistory(date, desc, "送信失敗");
-      setDebug({ reason: "zaim_not_authorized", data });
       return;
     }
     if (data.error === "invalid_input" || data.error === "invalid_date_format"){
       showToast("ng","入力内容を確認してください");
       addHistory(date, desc, "送信失敗");
-      setDebug({ reason: "invalid_input_from_server", data });
       return;
     }
 
+    // それ以外
     showToast("ng","送信できませんでした");
     addHistory(date, desc, "送信失敗");
-    setDebug({ reason: "server_returned_error", data });
 
   } catch (err){
     const isAbort = String(err && err.name) === "AbortError";
     showToast("ng", isAbort ? "通信が混み合ってるかも（もう一度）" : "通信できませんでした");
-    addHistory(date, desc, "送信失敗");
-
-    setDebug({
-      reason: "fetch_failed",
-      name: err && err.name,
-      message: String(err),
-      hint: "GASの公開設定が『全員』でない/ログイン画面に飛んでいる/通信環境の可能性",
-      endpoint: GAS_ENDPOINT
-    });
+    addHistory($("date").value, $("desc").value.trim() || "-", "送信失敗");
   } finally{
     setLoading(false);
     setTimeout(hideToast,1600);
   }
 };
+
+/* ====== 追加：初回だけ自動で設定画面を出す（改善案1） ====== */
+(function initPasscodePrompt(){
+  if (!getPasscode()){
+    // 画面描画後に出す（iOS対策）
+    setTimeout(() => openPassDialog(), 250);
+  }
+})();
+/* ====== 追加ここまで ====== */
 </script>
 </body>
 </html>
