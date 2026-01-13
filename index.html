@@ -8,10 +8,10 @@
 <meta name="theme-color" content="#f6f4ef">
 
 <!-- iPhone ホーム画面用 -->
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=4">
-<link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon-167.png?v=4">
-<link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon-152.png?v=4">
-<link rel="apple-touch-icon" sizes="120x120" href="./apple-touch-icon-120.png?v=4">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=5">
+<link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon-167.png?v=5">
+<link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon-152.png?v=5">
+<link rel="apple-touch-icon" sizes="120x120" href="./apple-touch-icon-120.png?v=5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="立て替え入力">
@@ -341,7 +341,10 @@ function renderHistory(){
   loadHistory().forEach(h=>{
     const d=document.createElement("div");
     d.className="item";
-    d.innerHTML=`<div class="left">${h.date} / ${escapeHtml(h.desc)}</div><div class="status">${escapeHtml(h.status)}</div>`;
+    d.innerHTML = `
+      <div class="left">${escapeHtml(h.date)} / ${escapeHtml(h.desc)}</div>
+      <div class="status">${escapeHtml(h.status)}</div>
+    `;
     list.appendChild(d);
   });
 }
@@ -354,6 +357,18 @@ function escapeHtml(str){
     .replaceAll("'","&#39;");
 }
 
+function addHistory(date, desc, status){
+  const h = loadHistory();
+  h.unshift({ date, desc, status });
+  saveHistory(h);
+  renderHistory();
+}
+
+function normalizeAmount(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
 $("date").value=today();
 renderHistory();
 
@@ -364,53 +379,91 @@ $("clear").onclick=()=>{
   setTimeout(hideToast,1200);
 };
 
-$("form").onsubmit=async e=>{
+$("form").onsubmit = async (e) => {
   e.preventDefault();
   hideToast();
 
-  const payload={
-    passcode:localStorage.getItem(LS_PASS)||"",
-    date:$("date").value,
-    amount:$("amount").value,
-    desc:$("desc").value.trim()
-  };
+  const passcode = (localStorage.getItem(LS_PASS) || "").trim();
+  if (!passcode){
+    showToast("ng","合言葉が未設定です（翔吾に設定してもらってね）");
+    addHistory($("date").value, $("desc").value.trim() || "-", "送信失敗");
+    return;
+  }
 
-  if(!payload.date||!payload.amount||!payload.desc){
+  const date = $("date").value;
+  const amount = normalizeAmount($("amount").value);
+  const desc = $("desc").value.trim();
+
+  if(!date || !amount || !desc){
     showToast("ng","入力を確認してください");
     return;
   }
 
+  const payload = { passcode, date, amount, desc };
+
   setLoading(true);
 
   try{
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000); // 15秒でタイムアウト
+
     const res = await fetch(GAS_ENDPOINT, {
-      method:"POST",
-      body:new URLSearchParams(payload)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+      redirect: "follow",
+      signal: controller.signal,
     });
 
-    const txt = await res.text();
-    const data = JSON.parse(txt);
+    clearTimeout(timer);
 
-    if(data.ok){
-      showToast("ok","送信しました");
-      const h=loadHistory();
-      h.unshift({date:payload.date,desc:payload.desc,status:"送信済み"});
-      saveHistory(h);
-      renderHistory();
-      $("amount").value="";
-      $("desc").value="";
-      $("amount").focus();
-    }else{
-      throw new Error("server_ng");
+    // 文字列で受けてからJSON化（GASがたまにtext/htmlを返すケース対策）
+    const txt = await res.text();
+    let data = null;
+    try { data = JSON.parse(txt); } catch { data = null; }
+
+    if (!data){
+      showToast("ng","通信結果を読み取れませんでした");
+      addHistory(date, desc, "送信失敗");
+      return;
     }
 
-  }catch{
+    if (data.ok){
+      showToast("ok","送信しました");
+      addHistory(date, desc, "送信済み");
+      $("amount").value = "";
+      $("desc").value = "";
+      $("amount").focus();
+      return;
+    }
+
+    // エラー種別ごとに表示
+    if (data.error === "unauthorized"){
+      showToast("ng","合言葉が違うかも（翔吾に確認してね）");
+      addHistory(date, desc, "送信失敗");
+      return;
+    }
+    if (data.error === "zaim_not_authorized"){
+      showToast("ng","初回設定が必要です（翔吾に言ってね）");
+      addHistory(date, desc, "送信失敗");
+      return;
+    }
+    if (data.error === "invalid_input" || data.error === "invalid_date_format"){
+      showToast("ng","入力内容を確認してください");
+      addHistory(date, desc, "送信失敗");
+      return;
+    }
+
+    // それ以外
     showToast("ng","送信できませんでした");
-    const h=loadHistory();
-    h.unshift({date:payload.date,desc:payload.desc,status:"送信失敗"});
-    saveHistory(h);
-    renderHistory();
-  }finally{
+    addHistory(date, desc, "送信失敗");
+
+  } catch (err){
+    const isAbort = String(err && err.name) === "AbortError";
+    showToast("ng", isAbort ? "通信が混み合ってるかも（もう一度）" : "通信できませんでした");
+    addHistory($("date").value, $("desc").value.trim() || "-", "送信失敗");
+  } finally{
     setLoading(false);
     setTimeout(hideToast,1600);
   }
