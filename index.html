@@ -1,732 +1,230 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>立て替え入力</title>
-  <meta name="theme-color" content="#f6f4ef" />
-  <style>
-    :root{
-      --bg1:#f6f4ef;
-      --bg2:#fbfaf7;
-      --card:#ffffffcc;
-      --text:#2b2b2b;
-      --muted:#6b6b6b;
-      --line:#e7e1d8;
-      --accent:#3b7c6a;
-      --accent2:#a6c9b8;
-      --good:#2f855a;
-      --bad:#c53030;
-      --warn:#b7791f;
-      --shadow: 0 18px 50px rgba(35, 32, 26, .12);
-      --radius: 18px;
-      --radius2: 14px;
-      --pad: 18px;
-      --tap: 54px;
-      --font: ui-sans-serif, system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family: var(--font);
-      color: var(--text);
-      background:
-        radial-gradient(900px 520px at 12% 0%, #e8f2ed 0%, transparent 55%),
-        radial-gradient(900px 520px at 100% 10%, #fff1e6 0%, transparent 48%),
-        radial-gradient(900px 520px at 70% 110%, #e7efe9 0%, transparent 48%),
-        linear-gradient(180deg, var(--bg2), var(--bg1));
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    .safe{
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      min-height: 100%;
-      display:flex;
-      justify-content:center;
-      align-items:flex-start;
-    }
-    .wrap{
-      width: 100%;
-      max-width: 520px;
-      padding: 20px 16px 28px;
-    }
-    header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      margin: 8px 2px 14px;
-    }
-    .title{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .title h1{
-      margin:0;
-      font-size: 20px;
-      letter-spacing: .01em;
-      font-weight: 800;
-    }
-    .title p{
-      margin:0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>立て替え入力</title>
+<meta name="theme-color" content="#f6f4ef" />
 
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 10px 12px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.75);
-      border-radius: 999px;
-      font-size: 12px;
-      color: var(--muted);
-      user-select:none;
-      white-space:nowrap;
-      box-shadow: 0 10px 25px rgba(35, 32, 26, .06);
-    }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background: #cbd5d1;
-      box-shadow: 0 0 0 2px rgba(0,0,0,.04) inset;
-    }
-    .dot.ok{ background: #46b27a; }
-    .dot.ng{ background: #e07070; }
+<style>
+:root{
+  --bg:#f6f4ef;
+  --card:#ffffffee;
+  --text:#2b2b2b;
+  --muted:#6b6b6b;
+  --line:#e7e1d8;
+  --accent:#3b7c6a;
+  --good:#2f855a;
+  --bad:#c53030;
+  --radius:18px;
+  --pad:18px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.wrap{
+  max-width:520px;
+  margin:auto;
+  padding:20px 16px 40px;
+}
+h1{
+  margin:0 0 6px;
+  font-size:20px;
+  font-weight:800;
+}
+p{
+  margin:0 0 16px;
+  font-size:13px;
+  color:var(--muted);
+}
 
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.80));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    .cardHead{
-      padding: 16px var(--pad);
-      border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,.65);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-    }
-    .cardHead .label{
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .cardHead .value{
-      font-size: 13px;
-      color: var(--text);
-      font-weight: 800;
-      letter-spacing:.01em;
-    }
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:var(--pad);
+}
 
-    form{
-      padding: 14px var(--pad) 16px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-    label{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    input{
-      appearance:none;
-      width: 100%;
-      min-height: var(--tap);
-      border-radius: var(--radius2);
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.88);
-      color: var(--text);
-      padding: 12px 12px;
-      font-size: 16px; /* iPhoneズーム防止 */
-      outline:none;
-    }
-    input::placeholder{ color: rgba(43,43,43,.35); }
-    input:focus{
-      border-color: rgba(59,124,106,.45);
-      box-shadow: 0 0 0 4px rgba(59,124,106,.14);
-    }
+label{
+  font-size:12px;
+  color:var(--muted);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:12px;
+}
+input{
+  min-height:48px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  padding:10px 12px;
+  font-size:16px;
+}
+input:focus{
+  outline:none;
+  border-color:var(--accent);
+}
 
-    .btn{
-      width:100%;
-      min-height: 56px;
-      border: none;
-      border-radius: 16px;
-      background: linear-gradient(180deg, #3b7c6a, #2f6b5c);
-      color: #ffffff;
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing:.02em;
-      display:inline-flex;
-      justify-content:center;
-      align-items:center;
-      gap:10px;
-      cursor:pointer;
-      transition: transform .04s ease, filter .2s ease, opacity .2s ease;
-      -webkit-tap-highlight-color: transparent;
-      user-select:none;
-      box-shadow: 0 14px 30px rgba(59,124,106,.18);
-    }
-    .btn:active{ transform: scale(.99); }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
 
-    .btnGhost{
-      min-height: 46px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.70);
-      color: var(--text);
-      font-weight: 800;
-      font-size: 14px;
-      padding: 0 14px;
-    }
+button{
+  width:100%;
+  min-height:54px;
+  border:none;
+  border-radius:16px;
+  background:var(--accent);
+  color:#fff;
+  font-size:16px;
+  font-weight:800;
+  margin-top:8px;
+}
+button:disabled{opacity:.6;}
 
-    .help{
-      margin-top: 6px;
-      font-size: 12px;
-      color: rgba(43,43,43,.62);
-      line-height: 1.45;
-    }
-    .help strong{ color: rgba(43,43,43,.90); }
-    .divider{
-      height:1px; background: var(--line);
-      margin: 10px 0 2px;
-    }
+.toast{
+  display:none;
+  margin-bottom:12px;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:13px;
+}
+.toast.ok{background:#edf7f2;color:var(--good);}
+.toast.ng{background:#fdecec;color:var(--bad);}
+.toast.show{display:block;}
 
-    /* Toast */
-    .toastWrap{
-      position: sticky;
-      top: 10px;
-      z-index: 50;
-      margin-bottom: 10px;
-      pointer-events:none;
-    }
-    .toast{
-      pointer-events:auto;
-      display:none;
-      padding: 12px 14px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.90);
-      box-shadow: 0 14px 40px rgba(35, 32, 26, .14);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      align-items:flex-start;
-      gap:10px;
-      margin: 0 0 10px;
-    }
-    .toast.show{ display:flex; }
-    .toast .icon{
-      width: 28px; height: 28px;
-      border-radius: 9px;
-      display:flex; align-items:center; justify-content:center;
-      background: rgba(59,124,106,.12);
-      color: var(--accent);
-      flex: 0 0 auto;
-      margin-top:2px;
-      font-weight: 900;
-    }
-    .toast.ok .icon{ background: rgba(47,133,90,.12); color: var(--good); }
-    .toast.ng .icon{ background: rgba(197,48,48,.10); color: var(--bad); }
-    .toast.warn .icon{ background: rgba(183,121,31,.10); color: var(--warn); }
-    .toast .t{
-      display:flex; flex-direction:column; gap:3px;
-      min-width:0;
-    }
-    .toast .t .h{
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing:.01em;
-    }
-    .toast .t .b{
-      font-size: 12px;
-      color: rgba(43,43,43,.70);
-      line-height: 1.35;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-    .toast .x{
-      margin-left:auto;
-      border:none;
-      background: transparent;
-      color: rgba(43,43,43,.65);
-      font-size: 18px;
-      padding: 2px 6px;
-      border-radius: 10px;
-      cursor:pointer;
-    }
-
-    /* History */
-    .history{
-      margin-top: 14px;
-      background: rgba(255,255,255,.55);
-      border-top: 1px solid var(--line);
-      padding: 12px var(--pad) 16px;
-    }
-    .historyTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom: 8px;
-    }
-    .historyTop h2{
-      margin:0;
-      font-size: 13px;
-      color: rgba(43,43,43,.90);
-      letter-spacing:.01em;
-      font-weight: 900;
-    }
-    .list{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .item{
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.85);
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-    }
-    .item .left{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      min-width:0;
-    }
-    .item .desc{
-      font-size: 13px;
-      font-weight: 900;
-      color: rgba(43,43,43,.92);
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      max-width: 330px;
-    }
-    .item .meta{
-      font-size: 11px;
-      color: rgba(43,43,43,.60);
-    }
-    .item .amt{
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing:.02em;
-      white-space:nowrap;
-      color: rgba(43,43,43,.92);
-    }
-
-    /* spinner */
-    .spin{
-      width:18px;height:18px;
-      border-radius:999px;
-      border: 2px solid rgba(255,255,255,.35);
-      border-top-color: rgba(255,255,255,.95);
-      animation: r 0.8s linear infinite;
-    }
-    @keyframes r{ to { transform: rotate(360deg); } }
-
-    @media (max-width: 420px){
-      .grid{ grid-template-columns: 1fr; }
-      .item .desc{ max-width: 240px; }
-    }
-  </style>
+.history{
+  margin-top:16px;
+  border-top:1px solid var(--line);
+  padding-top:12px;
+}
+.item{
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+  padding:8px 0;
+}
+.item .status{
+  color:var(--muted);
+}
+</style>
 </head>
 
 <body>
-  <div class="safe">
-    <div class="wrap">
+<div class="wrap">
 
-      <div class="toastWrap">
-        <div id="toast" class="toast">
-          <div class="icon" id="toastIcon">✓</div>
-          <div class="t">
-            <div class="h" id="toastTitle">OK</div>
-            <div class="b" id="toastBody"></div>
-          </div>
-          <button class="x" id="toastClose" type="button" aria-label="close">×</button>
-        </div>
+  <h1>立て替え入力</h1>
+  <p>使った分だけ入力して送信してください。</p>
+
+  <div id="toast" class="toast"></div>
+
+  <div class="card">
+    <form id="form">
+      <div class="grid">
+        <label>
+          日付
+          <input id="date" type="date" required />
+        </label>
+        <label>
+          金額（円）
+          <input id="amount" type="number" min="1" step="1" placeholder="850" required />
+        </label>
       </div>
 
-      <header>
-        <div class="title">
-          <h1>立て替え入力</h1>
-          <p>立て替えた分だけ、さくっと入力して送信。</p>
-        </div>
-        <div class="chip" id="statusChip" title="接続状態">
-          <span class="dot" id="statusDot"></span>
-          <span id="statusText">未確認</span>
-        </div>
-      </header>
-
-      <section class="card">
-        <div class="cardHead">
-          <div>
-            <div class="label">登録先</div>
-            <div class="value">Zaim：佳那立て替え（仮）</div>
-          </div>
-          <button class="btnGhost" type="button" id="btnSettings">設定</button>
-        </div>
-
-        <form id="form">
-          <div class="grid">
-            <label>
-              日付
-              <input id="date" name="date" type="date" required />
-            </label>
-
-            <label>
-              金額（円）
-              <input id="amount" name="amount" type="number" inputmode="numeric" min="1" step="1" placeholder="例：850" required />
-            </label>
-          </div>
-
-          <label>
-            内容
-            <input id="desc" name="desc" type="text" maxlength="60" placeholder="例：ランチ" required />
-          </label>
-
-          <button class="btn" id="submit" type="submit">
-            <span id="btnText">送信する</span>
-            <span id="btnSpin" class="spin" style="display:none;"></span>
-          </button>
-
-          <div class="help">
-            送信したら <strong>そのまま閉じてOK</strong>。<br/>
-            あとで翔吾が仕訳します。
-          </div>
-
-          <div class="divider"></div>
-        </form>
-
-        <div class="history">
-          <div class="historyTop">
-            <h2>このiPhoneの送信履歴（最新10件）</h2>
-            <button class="btnGhost" type="button" id="btnClearHistory">消す</button>
-          </div>
-          <div id="list" class="list"></div>
-          <div class="help" style="margin-top:10px;">
-            ※履歴はこの端末だけに保存されます（Zaimの履歴とは別）。
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <dialog id="dlg" style="border:none;border-radius:18px;max-width:520px;width:calc(100% - 32px);padding:0;background:rgba(255,255,255,.96);color:#2b2b2b;box-shadow:0 25px 80px rgba(35, 32, 26, .22);">
-    <div style="padding:16px 16px 14px;border-bottom:1px solid #e7e1d8;display:flex;justify-content:space-between;align-items:center;gap:10px;">
-      <div>
-        <div style="font-weight:900;letter-spacing:.01em;">設定</div>
-        <div style="font-size:12px;color:#6b6b6b;margin-top:4px;">最初に1回だけでOK。</div>
-      </div>
-      <button id="dlgClose" class="btnGhost" type="button" style="min-height:40px;">閉じる</button>
-    </div>
-
-    <div style="padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;">
-      <label style="font-size:12px;color:#6b6b6b;display:flex;flex-direction:column;gap:8px;">
-        合言葉（passcode）
-        <input id="passcode" type="password" inputmode="text" placeholder="家の合言葉"
-          style="min-height:54px;border-radius:14px;border:1px solid #e7e1d8;background:#fff;color:#2b2b2b;padding:12px;font-size:16px;outline:none;">
+      <label>
+        内容
+        <input id="desc" type="text" placeholder="ランチ" required />
       </label>
 
-      <button id="btnSavePass" class="btn" type="button" style="min-height:52px;border-radius:16px;">保存する</button>
+      <button id="submit" type="submit">送信</button>
+    </form>
 
-      <div style="font-size:12px;color:#6b6b6b;line-height:1.45;">
-        これはこの端末だけに保存されます。<br/>
-        忘れたら翔吾に聞けばOK。
+    <div class="history">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">
+        このiPhoneの送信履歴
       </div>
+      <div id="list"></div>
     </div>
-  </dialog>
+  </div>
+</div>
 
-  <script>
-    // ★ここだけ変更：あなたのWebアプリ /exec URL
-    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxJkPn6ubLm5b87TEHZWB3BuM8ndTia1s8X5y91CwWlbQ8M85nrAjQdbfUrREs175rS/exec";
+<script>
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxJkPn6ubLm5b87TEHZWB3BuM8ndTia1s8X5y91CwWlbQ8M85nrAjQdbfUrREs175rS/exec";
+const LS_PASS = "tatekai_passcode_v2";
+const LS_HISTORY = "tatekai_history_v2";
 
-    const LS_PASS = "tatekai_passcode_v2";
-    const LS_HISTORY = "tatekai_history_v2";
+const $ = id => document.getElementById(id);
+const toast = $("toast");
+const list = $("list");
 
-    const el = (id) => document.getElementById(id);
+function showToast(type,msg){
+  toast.className = "toast show " + type;
+  toast.textContent = msg;
+}
 
-    const $toast = el("toast");
-    const $toastIcon = el("toastIcon");
-    const $toastTitle = el("toastTitle");
-    const $toastBody = el("toastBody");
-    const $toastClose = el("toastClose");
+function today(){
+  const d=new Date();
+  return d.toISOString().slice(0,10);
+}
 
-    const $statusDot = el("statusDot");
-    const $statusText = el("statusText");
+function loadHistory(){
+  try{return JSON.parse(localStorage.getItem(LS_HISTORY)||"[]")}catch{return[]}
+}
+function saveHistory(arr){
+  localStorage.setItem(LS_HISTORY,JSON.stringify(arr.slice(0,10)));
+}
+function renderHistory(){
+  list.innerHTML="";
+  loadHistory().forEach(h=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.innerHTML=`<div>${h.date} / ${h.desc}</div><div class="status">${h.status}</div>`;
+    list.appendChild(d);
+  });
+}
 
-    const $date = el("date");
-    const $amount = el("amount");
-    const $desc = el("desc");
-    const $submit = el("submit");
-    const $btnText = el("btnText");
-    const $btnSpin = el("btnSpin");
+$("date").value=today();
+renderHistory();
 
-    const $list = el("list");
-    const $btnClearHistory = el("btnClearHistory");
+$("form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  toast.className="toast";
 
-    const $dlg = el("dlg");
-    const $btnSettings = el("btnSettings");
-    const $dlgClose = el("dlgClose");
-    const $passcode = el("passcode");
-    const $btnSavePass = el("btnSavePass");
+  const payload={
+    passcode:localStorage.getItem(LS_PASS)||"",
+    date:$("date").value,
+    amount:$("amount").value,
+    desc:$("desc").value.trim()
+  };
 
-    function yen(n){
-      try { return new Intl.NumberFormat("ja-JP").format(n) + "円"; }
-      catch { return (n + "円"); }
-    }
+  const params=new URLSearchParams(payload);
 
-    function showToast(type, title, body){
-      $toast.className = "toast show " + type;
-      $toastTitle.textContent = title;
-      $toastBody.textContent = body || "";
-      $toastIcon.textContent = type === "ok" ? "✓" : (type === "warn" ? "!" : "×");
-    }
+  try{
+    const res=await fetch(GAS_ENDPOINT,{method:"POST",body:params});
+    const txt=await res.text();
+    const data=JSON.parse(txt);
 
-    function hideToast(){ $toast.className = "toast"; }
-    $toastClose.addEventListener("click", hideToast);
-
-    function setStatus(ok, text){
-      $statusDot.className = "dot " + (ok ? "ok" : "ng");
-      $statusText.textContent = text;
-    }
-
-    function getPasscode(){
-      return localStorage.getItem(LS_PASS) || "";
-    }
-    function setPasscode(v){
-      localStorage.setItem(LS_PASS, v);
-    }
-
-    function loadHistory(){
-      try {
-        const raw = localStorage.getItem(LS_HISTORY);
-        const arr = raw ? JSON.parse(raw) : [];
-        return Array.isArray(arr) ? arr : [];
-      } catch {
-        return [];
-      }
-    }
-    function saveHistory(arr){
-      localStorage.setItem(LS_HISTORY, JSON.stringify(arr.slice(0, 10)));
-    }
-    function pushHistory(item){
-      const arr = loadHistory();
-      arr.unshift(item);
-      saveHistory(arr);
+    if(data.ok){
+      showToast("ok","送信しました");
+      const h=loadHistory();
+      h.unshift({...payload,status:"送信済み"});
+      saveHistory(h);
       renderHistory();
+      $("amount").value="";
+      $("desc").value="";
+      return;
     }
-    function renderHistory(){
-      const arr = loadHistory();
-      $list.innerHTML = "";
-      if (!arr.length){
-        const div = document.createElement("div");
-        div.className = "help";
-        div.textContent = "まだ送信履歴はありません。";
-        $list.appendChild(div);
-        return;
-      }
-      arr.forEach(x => {
-        const row = document.createElement("div");
-        row.className = "item";
-        const left = document.createElement("div");
-        left.className = "left";
-        const desc = document.createElement("div");
-        desc.className = "desc";
-        desc.textContent = x.desc;
-        const meta = document.createElement("div");
-        meta.className = "meta";
-        meta.textContent = `${x.date} / ${x.status}`;
-        left.appendChild(desc);
-        left.appendChild(meta);
-
-        const amt = document.createElement("div");
-        amt.className = "amt";
-        amt.textContent = yen(x.amount);
-
-        row.appendChild(left);
-        row.appendChild(amt);
-        $list.appendChild(row);
-      });
-    }
-
-    function todayYmd(){
-      const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth()+1).padStart(2,"0");
-      const dd = String(d.getDate()).padStart(2,"0");
-      return `${yyyy}-${mm}-${dd}`;
-    }
-
-    function setLoading(on){
-      $submit.disabled = on;
-      $btnSpin.style.display = on ? "inline-block" : "none";
-      $btnText.textContent = on ? "送信中…" : "送信する";
-    }
-
-    async function ping(){
-      const pc = getPasscode();
-      if (!GAS_ENDPOINT.includes("/exec")){
-        setStatus(false, "URL未設定");
-        return;
-      }
-      if (!pc){
-        setStatus(false, "合言葉未設定");
-        return;
-      }
-      setStatus(true, "準備OK");
-    }
-
-    function openSettings(){
-      $passcode.value = getPasscode();
-      $dlg.showModal();
-    }
-    function closeSettings(){
-      $dlg.close();
-    }
-
-    $btnSettings.addEventListener("click", openSettings);
-    $dlgClose.addEventListener("click", closeSettings);
-    $btnSavePass.addEventListener("click", () => {
-      const v = ($passcode.value || "").trim();
-      if (!v){
-        showToast("warn", "合言葉が空です", "合言葉を入れてから保存してね。");
-        return;
-      }
-      setPasscode(v);
-      showToast("ok", "保存しました", "次回から自動で使います。");
-      closeSettings();
-      ping();
-    });
-
-    $btnClearHistory.addEventListener("click", () => {
-      localStorage.removeItem(LS_HISTORY);
-      renderHistory();
-      showToast("ok", "履歴を消しました", "このiPhoneだけの履歴です。");
-    });
-
-    function tryParseJson_(text){
-      try { return JSON.parse(text); } catch { return null; }
-    }
-
-    document.getElementById("form").addEventListener("submit", async (ev) => {
-      ev.preventDefault();
-      hideToast();
-
-      const passcode = getPasscode();
-      if (!passcode){
-        showToast("warn", "合言葉が必要です", "右上の「設定」から合言葉を保存してね。");
-        openSettings();
-        return;
-      }
-
-      const payload = {
-        passcode,
-        date: $date.value,
-        amount: Number($amount.value),
-        desc: ($desc.value || "").trim()
-      };
-
-      if (!payload.date || !payload.amount || !payload.desc){
-        showToast("warn", "入力が足りないよ", "日付・金額・内容を入れてね。");
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        const params = new URLSearchParams();
-params.set("passcode", payload.passcode);
-params.set("date", payload.date);
-params.set("amount", String(payload.amount));
-params.set("desc", payload.desc);
-
-const res = await fetch(GAS_ENDPOINT, {
-  method: "POST",
-  // ★headersは付けない（ブラウザに任せる）＝事前確認を避ける
-  body: params
+    showToast("ng","送信できませんでした");
+  }catch{
+    showToast("ng","通信できませんでした");
+  }
 });
-
-        // ★まず text で受け取って、JSONならparseする
-        const raw = await res.text();
-        const data = tryParseJson_(raw);
-
-        if (!data){
-          // JSONじゃない＝HTML/エラーページ/リダイレクト等
-          showToast("ng", "JSONじゃない応答が返ってきた", raw.slice(0, 400));
-          setStatus(false, `応答:${res.status}`);
-          pushHistory({ ...payload, status: `NG(JSON以外:${res.status})`, at: Date.now() });
-          return;
-        }
-
-        if (data.ok){
-          showToast("ok", "送信できた！", "ありがとう。あとは翔吾が仕訳します。");
-          setStatus(true, "準備OK");
-          pushHistory({ ...payload, status: `OK(${res.status})`, at: Date.now() });
-
-          $amount.value = "";
-          $desc.value = "";
-          $amount.focus();
-          return;
-        }
-
-        if (data.error === "unauthorized"){
-          showToast("ng", "合言葉が違うかも", "設定から合言葉を入れ直してね。");
-          setStatus(false, "合言葉エラー");
-          openSettings();
-          pushHistory({ ...payload, status: "NG(unauthorized)", at: Date.now() });
-          return;
-        }
-        if (data.error === "zaim_not_authorized" && data.auth_url){
-          showToast("warn", "最初の設定が必要", "翔吾に言って認証してもらってね。");
-          setStatus(false, "Zaim未認証");
-          pushHistory({ ...payload, status: "NG(Zaim未認証)", at: Date.now() });
-          return;
-        }
-
-        const msg = data.error || "unknown_error";
-        showToast("ng", "送信できなかった", `${msg}\n${(data.detail || "").toString().slice(0, 300)}`);
-        setStatus(false, "エラー");
-        pushHistory({ ...payload, status: `NG(${msg})`, at: Date.now() });
-
-      } catch (e) {
-        showToast("ng", "通信できなかった", String(e));
-        setStatus(false, "通信NG");
-        pushHistory({ ...payload, status: "NG(通信例外)", at: Date.now() });
-      } finally {
-        setLoading(false);
-      }
-    });
-
-    (function init(){
-      $date.value = todayYmd();
-      renderHistory();
-      ping();
-
-      if (!getPasscode()){
-        setTimeout(openSettings, 250);
-      }
-    })();
-  </script>
+</script>
 </body>
 </html>
