@@ -5,12 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>立て替え入力</title>
 
+<meta name="theme-color" content="#f6f4ef">
+
 <!-- iPhone ホーム画面用 -->
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=4">
+<link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon-167.png?v=4">
+<link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon-152.png?v=4">
+<link rel="apple-touch-icon" sizes="120x120" href="./apple-touch-icon-120.png?v=4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="立て替え入力">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<meta name="theme-color" content="#f6f4ef" />
 
 <style>
 :root{
@@ -26,17 +30,20 @@
   --pad:18px;
 }
 *{box-sizing:border-box;}
+
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
   background:var(--bg);
   color:var(--text);
 }
+
 .wrap{
   max-width:520px;
   margin:auto;
   padding:20px 16px 40px;
 }
+
 h1{
   margin:0 0 6px;
   font-size:20px;
@@ -47,12 +54,14 @@ p{
   font-size:13px;
   color:var(--muted);
 }
+
 .card{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:var(--radius);
   padding:var(--pad);
 }
+
 label{
   font-size:12px;
   color:var(--muted);
@@ -60,9 +69,10 @@ label{
   flex-direction:column;
   gap:6px;
   margin-bottom:12px;
+  min-width:0;
 }
 
-/* iPhoneズレ対策 */
+/* iPhone入力ズレ対策 */
 input{
   -webkit-appearance:none;
   appearance:none;
@@ -81,21 +91,26 @@ input:focus{
   outline:none;
   border-color:var(--accent);
 }
+
 input[type="date"]{
   -webkit-appearance:none;
   appearance:none;
+  display:block;
+  width:100%;
 }
 
+/* grid */
 .grid{
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   gap:12px;
 }
-@media (max-width:420px){
+@media(max-width:420px){
   .grid{ grid-template-columns:minmax(0,1fr); }
 }
 
-button{
+/* 送信ボタン（主役） */
+.btn-primary{
   width:100%;
   min-height:54px;
   border:none;
@@ -106,8 +121,11 @@ button{
   font-weight:800;
   margin-top:8px;
 }
-button:disabled{opacity:.6;}
+.btn-primary:disabled{
+  opacity:.6;
+}
 
+/* トースト */
 .toast{
   display:none;
   margin-bottom:12px;
@@ -115,10 +133,11 @@ button:disabled{opacity:.6;}
   border-radius:14px;
   font-size:13px;
 }
-.toast.ok{background:#edf7f2;color:var(--good);}
-.toast.ng{background:#fdecec;color:var(--bad);}
-.toast.show{display:block;}
+.toast.ok{ background:#edf7f2; color:var(--good); }
+.toast.ng{ background:#fdecec; color:var(--bad); }
+.toast.show{ display:block; }
 
+/* 履歴 */
 .history{
   margin-top:16px;
   border-top:1px solid var(--line);
@@ -132,16 +151,19 @@ button:disabled{opacity:.6;}
   justify-content:space-between;
   align-items:center;
 }
+
+/* 消すボタン（サブ） */
 .clearBtn{
   border:1px solid var(--line);
   background:#fff;
   color:var(--muted);
-  min-height:34px;
+  min-height:32px;
   padding:0 10px;
   border-radius:12px;
   font-size:12px;
   font-weight:700;
 }
+
 .item{
   display:flex;
   justify-content:space-between;
@@ -187,7 +209,7 @@ button:disabled{opacity:.6;}
         <input id="desc" type="text" placeholder="ランチ" required>
       </label>
 
-      <button id="submit" type="submit">送信</button>
+      <button id="submit" type="submit" class="btn-primary">送信</button>
     </form>
 
     <div class="history">
@@ -221,21 +243,19 @@ function today(){
 }
 
 function loadHistory(){
-  try{return JSON.parse(localStorage.getItem(LS_HISTORY)||"[]");}
-  catch{return[];}
+  try{ return JSON.parse(localStorage.getItem(LS_HISTORY)||"[]"); }
+  catch{ return []; }
 }
-function saveHistory(arr){
-  localStorage.setItem(LS_HISTORY,JSON.stringify(arr.slice(0,10)));
+function saveHistory(a){
+  localStorage.setItem(LS_HISTORY, JSON.stringify(a.slice(0,10)));
 }
 function renderHistory(){
   list.innerHTML="";
   loadHistory().forEach(h=>{
-    const row=document.createElement("div");
-    row.className="item";
-    row.innerHTML=`
-      <div class="left">${h.date} / ${h.desc}</div>
-      <div class="status">${h.status}</div>`;
-    list.appendChild(row);
+    const d=document.createElement("div");
+    d.className="item";
+    d.innerHTML=`<div class="left">${h.date} / ${h.desc}</div><div class="status">${h.status}</div>`;
+    list.appendChild(d);
   });
 }
 
@@ -244,7 +264,7 @@ renderHistory();
 
 $("clear").onclick=()=>{
   localStorage.removeItem(LS_HISTORY);
-  renderHistory();
+  list.innerHTML="";
   showToast("ok","履歴を消しました");
   setTimeout(hideToast,1200);
 };
@@ -259,6 +279,7 @@ $("form").onsubmit=async e=>{
     amount:$("amount").value,
     desc:$("desc").value.trim()
   };
+
   if(!payload.date||!payload.amount||!payload.desc){
     showToast("ng","入力を確認してください");
     return;
@@ -287,7 +308,7 @@ $("form").onsubmit=async e=>{
     renderHistory();
   }finally{
     $("submit").disabled=false;
-    setTimeout(hideToast,1500);
+    setTimeout(hideToast,1600);
   }
 };
 </script>
