@@ -512,8 +512,8 @@ $("form").onsubmit = async (e) => {
   const passcode = getPasscode();
   if (!passcode){
     showToast("ng","合言葉が未設定です（翔吾に設定してもらってね）");
-    openPassDialog(); /* ← 追加：未設定なら設定画面を出す */
-    return;           /* ← ここで止める（履歴も増やさない） */
+    openPassDialog();
+    return;
   }
 
   const date = $("date").value;
@@ -531,12 +531,13 @@ $("form").onsubmit = async (e) => {
 
   try{
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000); // 15秒でタイムアウト
+    const timer = setTimeout(() => controller.abort(), 15000);
 
+    /* ★重要：JSON送信だとCORSの事前確認(preflight)が起きてiPhoneで落ちやすいので、
+       以前動いていた「form送信(URLSearchParams)」に戻す */
     const res = await fetch(GAS_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: new URLSearchParams(payload),
       cache: "no-store",
       redirect: "follow",
       signal: controller.signal,
@@ -544,7 +545,6 @@ $("form").onsubmit = async (e) => {
 
     clearTimeout(timer);
 
-    // 文字列で受けてからJSON化（GASがたまにtext/htmlを返すケース対策）
     const txt = await res.text();
     let data = null;
     try { data = JSON.parse(txt); } catch { data = null; }
@@ -564,7 +564,6 @@ $("form").onsubmit = async (e) => {
       return;
     }
 
-    // エラー種別ごとに表示
     if (data.error === "unauthorized"){
       showToast("ng","合言葉が違うかも（翔吾に確認してね）");
       addHistory(date, desc, "送信失敗");
@@ -581,7 +580,6 @@ $("form").onsubmit = async (e) => {
       return;
     }
 
-    // それ以外
     showToast("ng","送信できませんでした");
     addHistory(date, desc, "送信失敗");
 
@@ -598,7 +596,6 @@ $("form").onsubmit = async (e) => {
 /* ====== 追加：初回だけ自動で設定画面を出す（改善案1） ====== */
 (function initPasscodePrompt(){
   if (!getPasscode()){
-    // 画面描画後に出す（iOS対策）
     setTimeout(() => openPassDialog(), 250);
   }
 })();
