@@ -145,7 +145,7 @@
       font-size: 12px;
       color: var(--muted);
     }
-    input, textarea{
+    input{
       appearance:none;
       width: 100%;
       min-height: var(--tap);
@@ -157,14 +157,8 @@
       font-size: 16px; /* iPhoneズーム防止 */
       outline:none;
     }
-    textarea{
-      min-height: 64px;
-      resize: none;
-      line-height: 1.35;
-      padding-top: 12px;
-    }
-    input::placeholder, textarea::placeholder{ color: rgba(43,43,43,.35); }
-    input:focus, textarea:focus{
+    input::placeholder{ color: rgba(43,43,43,.35); }
+    input:focus{
       border-color: rgba(59,124,106,.45);
       box-shadow: 0 0 0 4px rgba(59,124,106,.14);
     }
@@ -265,6 +259,7 @@
       color: rgba(43,43,43,.70);
       line-height: 1.35;
       word-break: break-word;
+      white-space: pre-wrap;
     }
     .toast .x{
       margin-left:auto;
@@ -630,6 +625,10 @@
       showToast("ok", "履歴を消しました", "このiPhoneだけの履歴です。");
     });
 
+    function tryParseJson_(text){
+      try { return JSON.parse(text); } catch { return null; }
+    }
+
     document.getElementById("form").addEventListener("submit", async (ev) => {
       ev.preventDefault();
       hideToast();
@@ -662,21 +661,23 @@
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json().catch(() => null);
+        // ★まず text で受け取って、JSONならparseする
+        const raw = await res.text();
+        const data = tryParseJson_(raw);
 
         if (!data){
-          showToast("ng", "通信の読み取りに失敗", "もう一度送ってみてね。");
-          setStatus(false, "応答不明");
-          pushHistory({ ...payload, status: "NG(応答不明)", at: Date.now() });
+          // JSONじゃない＝HTML/エラーページ/リダイレクト等
+          showToast("ng", "JSONじゃない応答が返ってきた", raw.slice(0, 400));
+          setStatus(false, `応答:${res.status}`);
+          pushHistory({ ...payload, status: `NG(JSON以外:${res.status})`, at: Date.now() });
           return;
         }
 
         if (data.ok){
           showToast("ok", "送信できた！", "ありがとう。あとは翔吾が仕訳します。");
           setStatus(true, "準備OK");
-          pushHistory({ ...payload, status: `OK(${data.zaim_status || "2xx"})`, at: Date.now() });
+          pushHistory({ ...payload, status: `OK(${res.status})`, at: Date.now() });
 
-          // 次入力が楽になる初期化（奥さん向け：日付は今日のまま、金額/内容だけ消す）
           $amount.value = "";
           $desc.value = "";
           $amount.focus();
@@ -698,14 +699,14 @@
         }
 
         const msg = data.error || "unknown_error";
-        showToast("ng", "送信できなかった", msg);
+        showToast("ng", "送信できなかった", `${msg}\n${(data.detail || "").toString().slice(0, 300)}`);
         setStatus(false, "エラー");
         pushHistory({ ...payload, status: `NG(${msg})`, at: Date.now() });
 
       } catch (e) {
-        showToast("ng", "通信できなかった", "電波/URLを確認してもう一度。");
+        showToast("ng", "通信できなかった", String(e));
         setStatus(false, "通信NG");
-        pushHistory({ ...payload, status: "NG(通信)", at: Date.now() });
+        pushHistory({ ...payload, status: "NG(通信例外)", at: Date.now() });
       } finally {
         setLoading(false);
       }
