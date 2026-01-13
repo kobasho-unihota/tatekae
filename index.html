@@ -91,7 +91,6 @@ input:focus{
   outline:none;
   border-color:var(--accent);
 }
-
 input[type="date"]{
   -webkit-appearance:none;
   appearance:none;
@@ -120,10 +119,26 @@ input[type="date"]{
   font-size:16px;
   font-weight:800;
   margin-top:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
 }
 .btn-primary:disabled{
   opacity:.6;
 }
+
+/* ボタン内スピナー */
+.btn-spin{
+  width:18px;
+  height:18px;
+  border-radius:999px;
+  border:2px solid rgba(255,255,255,.45);
+  border-top-color: rgba(255,255,255,.95);
+  animation: r .8s linear infinite;
+  display:none;
+}
+@keyframes r{ to { transform: rotate(360deg); } }
 
 /* トースト */
 .toast{
@@ -181,10 +196,69 @@ input[type="date"]{
   color:var(--muted);
   white-space:nowrap;
 }
+
+/* 送信中オーバーレイ */
+.overlay{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background: rgba(246,244,239,.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index:9999;
+}
+.overlay.show{ display:flex; }
+.overlayCard{
+  width:min(360px, 92vw);
+  background: rgba(255,255,255,.92);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow: 0 20px 70px rgba(35,32,26,.18);
+  padding:16px 16px 14px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.overlaySpin{
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  border:2px solid rgba(59,124,106,.22);
+  border-top-color: var(--accent);
+  animation: r .8s linear infinite;
+}
+.overlayText{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+.overlayText .h{
+  font-size:14px;
+  font-weight:800;
+}
+.overlayText .b{
+  font-size:12px;
+  color: var(--muted);
+}
 </style>
 </head>
 
 <body>
+<!-- 送信中オーバーレイ -->
+<div id="overlay" class="overlay" aria-hidden="true">
+  <div class="overlayCard" role="status" aria-live="polite">
+    <div class="overlaySpin" aria-hidden="true"></div>
+    <div class="overlayText">
+      <div class="h">送信中…</div>
+      <div class="b">少しだけ待ってね</div>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
   <h1>立て替え入力</h1>
   <p>使った分だけ入力して送信してください。</p>
@@ -209,7 +283,10 @@ input[type="date"]{
         <input id="desc" type="text" placeholder="ランチ" required>
       </label>
 
-      <button id="submit" type="submit" class="btn-primary">送信</button>
+      <button id="submit" type="submit" class="btn-primary">
+        <span id="btnText">送信</span>
+        <span id="btnSpin" class="btn-spin" aria-hidden="true"></span>
+      </button>
     </form>
 
     <div class="history">
@@ -230,12 +307,22 @@ const LS_HISTORY = "tatekai_history_v2";
 const $ = id => document.getElementById(id);
 const toast = $("toast");
 const list = $("list");
+const overlay = $("overlay");
+const btnText = $("btnText");
+const btnSpin = $("btnSpin");
 
 function showToast(type,msg){
   toast.className = "toast show " + type;
   toast.textContent = msg;
 }
 function hideToast(){ toast.className="toast"; }
+
+function setLoading(on){
+  $("submit").disabled = on;
+  overlay.className = on ? "overlay show" : "overlay";
+  btnSpin.style.display = on ? "inline-block" : "none";
+  btnText.textContent = on ? "送信中…" : "送信";
+}
 
 function today(){
   const d=new Date();
@@ -254,9 +341,17 @@ function renderHistory(){
   loadHistory().forEach(h=>{
     const d=document.createElement("div");
     d.className="item";
-    d.innerHTML=`<div class="left">${h.date} / ${h.desc}</div><div class="status">${h.status}</div>`;
+    d.innerHTML=`<div class="left">${h.date} / ${escapeHtml(h.desc)}</div><div class="status">${escapeHtml(h.status)}</div>`;
     list.appendChild(d);
   });
+}
+function escapeHtml(str){
+  return String(str || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
 }
 
 $("date").value=today();
@@ -285,10 +380,17 @@ $("form").onsubmit=async e=>{
     return;
   }
 
-  $("submit").disabled=true;
+  setLoading(true);
+
   try{
-    const res=await fetch(GAS_ENDPOINT,{method:"POST",body:new URLSearchParams(payload)});
-    const data=JSON.parse(await res.text());
+    const res = await fetch(GAS_ENDPOINT, {
+      method:"POST",
+      body:new URLSearchParams(payload)
+    });
+
+    const txt = await res.text();
+    const data = JSON.parse(txt);
+
     if(data.ok){
       showToast("ok","送信しました");
       const h=loadHistory();
@@ -297,9 +399,11 @@ $("form").onsubmit=async e=>{
       renderHistory();
       $("amount").value="";
       $("desc").value="";
+      $("amount").focus();
     }else{
-      throw 0;
+      throw new Error("server_ng");
     }
+
   }catch{
     showToast("ng","送信できませんでした");
     const h=loadHistory();
@@ -307,7 +411,7 @@ $("form").onsubmit=async e=>{
     saveHistory(h);
     renderHistory();
   }finally{
-    $("submit").disabled=false;
+    setLoading(false);
     setTimeout(hideToast,1600);
   }
 };
