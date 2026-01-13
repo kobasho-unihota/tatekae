@@ -655,11 +655,17 @@
       setLoading(true);
 
       try {
-        const res = await fetch(GAS_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+        const params = new URLSearchParams();
+params.set("passcode", payload.passcode);
+params.set("date", payload.date);
+params.set("amount", String(payload.amount));
+params.set("desc", payload.desc);
+
+const res = await fetch(GAS_ENDPOINT, {
+  method: "POST",
+  // ★headersは付けない（ブラウザに任せる）＝事前確認を避ける
+  body: params
+});
 
         // ★まず text で受け取って、JSONならparseする
         const raw = await res.text();
